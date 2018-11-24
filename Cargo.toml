@@ -1,0 +1,13 @@
+[package]
+name = "threading"
+version = "0.1.0"
+authors = ["Andrew <arellok@gmail.com>"]
+
+[dependencies]
+reqwest = "0.9.4"
+env_logger = "0.6.0"
+url = "1.6.0"
+serde_json = "*"
+serde = "*"
+serde_derive = "*"
+base64 = "*"
