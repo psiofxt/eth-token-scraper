@@ -10,6 +10,7 @@ extern crate base64;
 use std::thread;
 use std::time::Duration;
 use std::env;
+use std::collections::HashSet;
 
 use url::Url;
 
@@ -70,7 +71,7 @@ fn get_logs() -> Result<LogResponse, Box<std::error::Error>> {
             }}\
         ]",
         env::var("CONTRACT_ADDRESS").unwrap(),
-        "0x305FC6",
+        "0x60998B",
         "latest",
         "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
     );
@@ -92,11 +93,14 @@ fn main() {
     let mut thread_vector = vec![];
     let logs = get_logs().unwrap();
     let result: Vec<Value> = logs.result;
-
+    let mut addresses: HashSet<String> = HashSet::new();
     for entry in result {
+        addresses.insert(entry["topics"][2].to_string());
+    }
+    for address in addresses {
         thread_vector.push(
             thread::spawn(
-                move || { get_balance(entry["topics"][2].to_string()); thread::sleep(Duration::from_millis(1)); }
+                move || { get_balance(address); thread::sleep(Duration::from_millis(1)); }
             )
         );
     }
