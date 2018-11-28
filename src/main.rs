@@ -115,14 +115,6 @@ fn main() {
             )
         );
     }
-    /*
-    for address in addresses {
-        thread_vector.push(
-            thread::spawn(
-                move || { get_balance(address); thread::sleep(Duration::from_millis(1)); }
-            )
-        );
-    }*/
     for child in thread_vector {
        match child.join() {
           Ok(_) => (),
