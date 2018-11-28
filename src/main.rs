@@ -11,6 +11,7 @@ use std::thread;
 use std::time::Duration;
 use std::env;
 use std::collections::HashSet;
+use std::cmp::Ordering;
 
 use url::Url;
 
@@ -33,30 +34,33 @@ struct BalanceResponse {
 }
 
 
-fn get_balance(addr: String) -> Result<BalanceResponse, Box<std::error::Error>> {
-    let parsed_adder = format!(
-        "0x{}", &addr[27..67]
-    );
-    let params = format!(
-        "params=[\
-            \"{}\",\
-            \"{}\"\
-        ]",
-        parsed_adder,
-        "latest"
-    );
-    let url = format!("https://api.infura.io/v1/jsonrpc/{}/eth_getBalance?{}",
-                       env::var("ETH_NETWORK").unwrap(), params);
-    let url = Url::parse(&url)?;
-    let mut res = reqwest::get(url)?;
-    let text = res.text()?;
-    let v: BalanceResponse = match serde_json::from_str(&text){
-        Result::Ok(val) => {val},
-        Result::Err(err) => {panic!("Unable to parse json: {}",err)}
-    };
+fn get_balance(address: Vec<String>) -> Result<(), Box<std::error::Error>> {
+    for addr in address {
+        let parsed_adder = format!(
+            "0x{}", &addr[27..67]
+        );
+        let params = format!(
+            "params=[\
+                \"{}\",\
+                \"{}\"\
+            ]",
+            parsed_adder,
+            "latest"
+        );
+        let url = format!("https://api.infura.io/v1/jsonrpc/{}/eth_getBalance?{}",
+                           env::var("ETH_NETWORK").unwrap(), params);
+        let url = Url::parse(&url)?;
+        let mut res = reqwest::get(url)?;
+        let text = res.text()?;
+        let v: BalanceResponse = match serde_json::from_str(&text){
+            Result::Ok(val) => {val},
+            Result::Err(err) => {panic!("Unable to parse json: {}",err)}
+        };
 
-    println!("{:?}", v.result);
-    Ok(v)
+        println!("{:?}", v.result);
+
+    }
+    Ok(())
 }
 
 
@@ -97,13 +101,28 @@ fn main() {
     for entry in result {
         addresses.insert(entry["topics"][2].to_string());
     }
+    let mut address_vec: Vec<_> = addresses.drain().collect();
+    while !address_vec.is_empty() {
+        let end = match 3.cmp(&address_vec.len()) {
+            Ordering::Less => 3,
+            Ordering::Equal => 3,
+            _ => address_vec.len()
+        };
+        let u: Vec<_> = address_vec.drain(0..end).collect();
+        thread_vector.push(
+            thread::spawn(
+                move || { get_balance(u); thread::sleep(Duration::from_millis(1)); }
+            )
+        );
+    }
+    /*
     for address in addresses {
         thread_vector.push(
             thread::spawn(
                 move || { get_balance(address); thread::sleep(Duration::from_millis(1)); }
             )
         );
-    }
+    }*/
     for child in thread_vector {
        match child.join() {
           Ok(_) => (),
