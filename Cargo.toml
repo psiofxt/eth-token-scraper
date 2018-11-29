@@ -11,3 +11,5 @@ serde_json = "*"
 serde = "*"
 serde_derive = "*"
 base64 = "*"
+mongodb = { git = "https://github.com/mongodb-labs/mongo-rust-driver-prototype/" }
+log = "0.4.1"
