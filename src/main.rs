@@ -75,7 +75,7 @@ fn get_balance(address: Vec<String>) -> Result<(), Box<std::error::Error>> {
             Result::Err(err) => {panic!("Unable to parse json: {}",err)}
         };
         let result: String = v.result;
-        if result == "0x0" {
+        if result == "0x0000000000000000000000000000000000000000000000000000000000000000" {
             continue
         };
         let client = Client::connect("localhost", 27017)
